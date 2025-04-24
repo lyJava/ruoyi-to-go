@@ -1,12 +1,10 @@
 # ruoyi-to-go
 
 #### 介绍
-尝试使用golang重写的若依后台
-前端参考来着若依[vue3的js](https://github.com/yangzongzhuan/RuoYi-Vue3)版本与[若依前后端分离版](https://gitee.com/y_project/RuoYi-Vue)，改写为ts版本，后端依赖于[若依](https://gitee.com/y_project/RuoYi-Vue)中的后端版本，具体文档参见[若依文档](http://ruoyi.vip/)。再次感谢若依！
+前端参考来着若依[vue3的js](https://github.com/yangzongzhuan/RuoYi-Vue3)版本与[若依前后端分离版](https://gitee.com/y_project/RuoYi-Vue)，改写为vue3，ts版本，后端golang参考自[若依](https://gitee.com/y_project/RuoYi-Vue)中的后端版本，具体文档参见[若依文档](http://ruoyi.vip/)。再次感谢若依！
 
 #### 软件架构
 软件架构说明
-后台为golang，重写了大部分功能，未完成的功能待续。。。
 
 #### 安装教程
 
