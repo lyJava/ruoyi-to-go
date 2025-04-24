@@ -2488,7 +2488,7 @@ ALTER TABLE "public"."sys_config" ADD CONSTRAINT "sys_config_pkey" PRIMARY KEY (
 -- ----------------------------
 -- Auto increment value for sys_dept
 -- ----------------------------
-SELECT setval('"public"."sys_dept_dept_id_seq"', 15993, true);
+SELECT setval('"public"."sys_dept_dept_id_seq"', 200, true);
 
 -- ----------------------------
 -- Primary Key structure for table sys_dept
@@ -2616,7 +2616,7 @@ ALTER TABLE "public"."sys_role_menu" ADD CONSTRAINT "sys_role_menu_pkey" PRIMARY
 -- ----------------------------
 -- Auto increment value for sys_user
 -- ----------------------------
-SELECT setval('"public"."sys_user_user_id_seq"', 378536, true);
+SELECT setval('"public"."sys_user_user_id_seq"', 100, true);
 
 -- ----------------------------
 -- Primary Key structure for table sys_user
