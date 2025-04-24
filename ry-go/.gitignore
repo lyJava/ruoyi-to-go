@@ -1,0 +1,14 @@
+/logs/
+.vscode/
+.idea
+*.iws
+*.iml
+*.ipr
+.DS_store
+*.tmp
+*.DS_Store
+sqlc.yaml
+/sqlc
+/upload
+/excel
+/gorm_*.log
