@@ -11,7 +11,6 @@
 </template>
 
 <script setup lang="ts">
-import { defineProps, ref, watch, onMounted, reactive } from "vue";
 
 interface DateArrays {
 	[index: number]: number[];

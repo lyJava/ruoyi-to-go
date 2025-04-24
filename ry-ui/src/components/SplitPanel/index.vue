@@ -30,7 +30,6 @@
 	</div>
 </template>
 <script lang="ts">
-import { computed, defineProps, ref } from 'vue'
 // 定义 props 类型
 interface Props {
     direction: 'row' | 'column' // 方向
@@ -53,9 +52,7 @@ const paneLengthPercent = ref<number>(30) // 区域1宽度 (%)
 const triggerLength = ref<number>(10) // 滑动器宽度 （px）
 const triggerLeftOffset = ref<number>(0)// 鼠标距滑动器左(顶)侧偏移量
 
-
 const splitPane = ref<HTMLElement | null>(null) // 区域1宽度 (%)
-
 
 const lengthType = computed((): 'width' | 'height' => props.direction === 'row' ? 'width' : 'height')
 const paneLengthValue = computed((): string => `calc(${paneLengthPercent.value}% - ${triggerLength.value / 2 + 'px'})`)
@@ -90,8 +87,7 @@ const handleMouseMove = (e: MouseEvent): void => {
 
 }
 const handleMouseUp = (e: MouseEvent): void => {
-    document.removeEventListener('mousemove', handleMouseMove)
-
+    document.removeEventListener('mousemove', handleMouseMove);
 }
 
 </script>
