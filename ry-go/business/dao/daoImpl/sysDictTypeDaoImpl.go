@@ -195,31 +195,34 @@ func (impl *SysDictTypeDaoImpl) SelectAll(ctx context.Context) ([]*domain.SysDic
 }
 
 func (impl *SysDictTypeDaoImpl) ClearCache(ctx context.Context) error {
-	var all []*domain.SysDictType
-	if err := impl.Gorm.WithContext(ctx).Model(&domain.SysDictType{}).Select("dict_id", "dict_type").Find(&all).Error; err != nil {
+	all, err := selectIdAdType(ctx, impl)
+	if err != nil {
 		return err
 	}
 
 	if len(all) > 0 {
-		var cacheKeyList []string
 		for _, dictType := range all {
 			if dictType == nil {
 				continue
 			}
 
-			cacheKeyList = append(cacheKeyList, fmt.Sprintf("%s%s", "sys_dict:", dictType.DictType))
-		}
-
-		if _, err := utils.Del(ctx, impl.RedisClient, cacheKeyList...); err != nil {
-			log.Printf("failed to delete cache data keyList==%+v,err==%+v", cacheKeyList, err)
+			if dictType.DictType == "" {
+				continue
+			}
+			cacheKey := fmt.Sprintf("sys_dict:%s", dictType.DictType)
+			count, delErr := utils.Del(ctx, impl.RedisClient, cacheKey)
+			if delErr != nil {
+				log.Printf("failed to delete cache data key==%+v,err==%+v", cacheKey, delErr)
+			}
+			log.Printf("字典缓存key===%s 删除数量==%d", cacheKey, count)
 		}
 	}
 	return nil
 }
 
 func (impl *SysDictTypeDaoImpl) RefreshCache(ctx context.Context) error {
-	var all []*domain.SysDictType
-	if err := impl.Gorm.WithContext(ctx).Model(&domain.SysDictType{}).Select("dict_id", "dict_type").Find(&all).Error; err != nil {
+	all, err := selectIdAdType(ctx, impl)
+	if err != nil {
 		return err
 	}
 
@@ -231,9 +234,9 @@ func (impl *SysDictTypeDaoImpl) RefreshCache(ctx context.Context) error {
 
 			dictTypeStr := dictType.DictType
 
-			dataList, err := impl.DataDao.SelectDictDataByType(ctx, dictTypeStr)
-			if err != nil {
-				log.Println("failed to load dict data")
+			dataList, dataErr := impl.DataDao.SelectDictDataByType(ctx, dictTypeStr)
+			if dataErr != nil {
+				log.Printf("failed to load dict data err==%+v", dataErr)
 			}
 
 			if len(dataList) == 0 {
@@ -241,13 +244,21 @@ func (impl *SysDictTypeDaoImpl) RefreshCache(ctx context.Context) error {
 				continue
 			}
 
-			result, err := utils.Set(ctx, impl.RedisClient, fmt.Sprintf("sys_dict:%s", dictTypeStr), dataList, time.Hour)
-			if err != nil {
-				log.Printf("cache type = %s set error %+v", dictType.DictType, err)
+			result, serErr := utils.Set(ctx, impl.RedisClient, fmt.Sprintf("sys_dict:%s", dictTypeStr), dataList, time.Hour)
+			if serErr != nil {
+				log.Printf("cache type = %s set error %+v", dictType.DictType, serErr)
 				continue
 			}
 			log.Printf("cache type = %s set result %s", dictType.DictType, result)
 		}
 	}
 	return nil
+}
+
+func selectIdAdType(ctx context.Context, impl *SysDictTypeDaoImpl) ([]*domain.SysDictType, error) {
+	var all []*domain.SysDictType
+	if err := impl.Gorm.WithContext(ctx).Model(&domain.SysDictType{}).Select("dict_id", "dict_type").Find(&all).Error; err != nil {
+		return nil, err
+	}
+	return all, nil
 }
