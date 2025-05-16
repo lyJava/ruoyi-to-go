@@ -62,8 +62,8 @@ export default () => {
 	};
 
 	/** 清理指定键名缓存 */
-	const handleClearCacheKey = (cacheKey: any) => {
-		clearCacheKey(cacheKey).then((response: any) => {
+	const handleClearCacheKey = async (cacheKey: any) => {
+		await clearCacheKey(cacheKey).then((response: any) => {
 			if (response.code === 200) {
 				proxy.$modal.msgSuccess(`清理缓存键名[${cacheKey}]成功`);
 				getCacheKeys();
@@ -82,8 +82,8 @@ export default () => {
 	};
 
 	/** 查询缓存内容详细 */
-	const handleCacheValue = (cacheKey: any) => {
-		getCacheValue(nowCacheName.value, keyFormatter(cacheKey)).then((response: any) => {
+	const handleCacheValue = async (cacheKey: any) => {
+		await getCacheValue(nowCacheName.value, keyFormatter(cacheKey)).then((response: any) => {
 			if (response.code === 200) {
 				cacheForm.value = response.data;
 			}
@@ -91,10 +91,14 @@ export default () => {
 	};
 
 	/** 清理全部缓存 */
-	const handleClearCacheAll = () => {
-		clearCacheAll().then((response: any) => {
+	const handleClearCacheAll = async () => {
+		await clearCacheAll().then((response: any) => {
 			if (response.code === 200) {
 				proxy.$modal.msgSuccess("清理全部缓存成功");
+				cacheNames.value = [];
+				cacheKeys.value = [];
+				cacheForm.value = {};
+				getCacheNames();
 			}
 		});
 	};
