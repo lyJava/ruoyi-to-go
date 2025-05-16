@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go.uber.org/zap"
+	"log"
 	"ry-go/business/dao"
 	"ry-go/business/domain"
 	"ry-go/common/request"
@@ -13,11 +15,9 @@ import (
 
 	"github.com/lib/pq"
 
-	_ "gorm.io/driver/postgres"
-
 	"github.com/go-redis/redis/v8"
 	"github.com/spf13/cast"
-	"go.uber.org/zap"
+	_ "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
@@ -76,7 +76,7 @@ func (impl *SysDictTypeDaoImpl) Update(ctx context.Context, sysDictType *domain.
 		Omit("dict_id").
 		Save(&sysDictType)
 	if result.Error != nil {
-		zap.L().Sugar().Error("字典数据修改事务执行错误===", zap.Error(result.Error))
+		log.Printf("字典数据修改事务执行错误===%+v", result.Error)
 		return 0, errors.New("字典数据修改失败")
 	}
 
@@ -88,11 +88,11 @@ func (impl *SysDictTypeDaoImpl) BatchInsert(ctx context.Context, list []*domain.
 		return nil, errors.New("字典数据批量新增参数验证失败")
 	}
 
-	zap.L().Sugar().Infof("字典数据批量新增BatchInsert参数:list===%v", list)
+	log.Printf("字典数据批量新增BatchInsert参数:list===%v", list)
 
 	result := impl.Gorm.WithContext(ctx).CreateInBatches(list, 50)
 	if result.Error != nil {
-		zap.L().Sugar().Error("字典数据批量新增BatchInsert错误===", zap.Error(result.Error))
+		log.Printf("字典数据批量新增BatchInsert错误===%+v", result.Error)
 		return nil, errors.New("字典数据批量新增失败")
 	}
 
@@ -101,7 +101,7 @@ func (impl *SysDictTypeDaoImpl) BatchInsert(ctx context.Context, list []*domain.
 		ids = append(ids, item.DictId)
 	}
 
-	zap.L().Sugar().Infof("字典数据批量新增BatchInsert成功,成功条数===%d,返回ids:===%v", result.RowsAffected, ids)
+	log.Printf("字典数据批量新增BatchInsert成功,成功条数===%d,返回ids:===%v", result.RowsAffected, ids)
 	return ids, nil
 }
 
@@ -112,7 +112,7 @@ func (impl *SysDictTypeDaoImpl) SelectById(ctx context.Context, id int64) (*doma
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("字典数据未找到")
 		}
-		zap.L().Error("查询SysDictType失败", zap.Error(err))
+		log.Printf("查询SysDictType错误===%+v", err)
 		return nil, errors.New("字典数据查询失败")
 	}
 	return sysDictType, nil
@@ -165,11 +165,7 @@ func (impl *SysDictTypeDaoImpl) SelectPage(ctx context.Context, param *request.D
 	if err := db.
 		Offset(int(offset)).Limit(int(param.Size)).
 		Find(&list).Error; err != nil {
-		zap.L().Error("获取字典数据列表异常",
-			zap.Error(err),
-			zap.String("function", "SelectPage"),
-			zap.Any("param", param),
-		)
+		log.Printf("获取字典数据列表异常==%+v", err)
 		return nil, 0, 0, errors.New("获取字典数据列表失败")
 	}
 
@@ -180,13 +176,13 @@ func (impl *SysDictTypeDaoImpl) BatchDelete(ctx context.Context, ids []any) (int
 	if len(ids) <= 0 {
 		return 0, errors.New("字典数据批量删除参数验证失败")
 	}
-	zap.L().Sugar().Infof("字典数据批量删除参数:ids===%v", ids)
+	log.Printf("字典数据批量删除参数:ids===%v", ids)
 	result := impl.Gorm.WithContext(ctx).Model(&domain.SysDictType{}).Where("dict_id IN (?)", ids).Delete(nil)
 	if result.Error != nil {
-		zap.L().Sugar().Error("字典数据批量删除异常", zap.Error(result.Error))
+		log.Printf("字典数据批量删除异常==%+v", result.Error)
 		return 0, errors.New("批量删除失败")
 	}
-	zap.L().Sugar().Infof("字典数据批量删除成功执行条数===%d", result.RowsAffected)
+	log.Printf("字典数据批量删除成功执行条数===%d", result.RowsAffected)
 	return result.RowsAffected, nil
 }
 
@@ -215,10 +211,7 @@ func (impl *SysDictTypeDaoImpl) ClearCache(ctx context.Context) error {
 		}
 
 		if _, err := utils.Del(ctx, impl.RedisClient, cacheKeyList...); err != nil {
-			zap.L().Error("failed to delete cache data",
-				zap.Error(err),
-				zap.Any("keyList", cacheKeyList),
-			)
+			log.Printf("failed to delete cache data keyList==%+v,err==%+v", cacheKeyList, err)
 		}
 	}
 	return nil
@@ -238,15 +231,20 @@ func (impl *SysDictTypeDaoImpl) RefreshCache(ctx context.Context) error {
 
 			dataList, err := impl.DataDao.SelectDictDataByType(ctx, dictType.DictType)
 			if err != nil {
-				zap.L().Error("failed to load dict data")
+				log.Println("failed to load dict data")
 			}
 
 			if len(dataList) == 0 {
-				zap.L().Sugar().Errorf("cache type = %s data list length is 0, skip it", dictType.DictType)
+				log.Printf("cache type = %s data list length is 0, skip it", dictType.DictType)
 				continue
 			}
 
-			utils.Set(ctx, impl.RedisClient, fmt.Sprintf("%s%s", "sys_dict:", dictType.DictType), dataList, time.Hour)
+			result, err := utils.Set(ctx, impl.RedisClient, fmt.Sprintf("%s%s", "sys_dict:", dictType.DictType), dataList, time.Hour)
+			if err != nil {
+				log.Printf("cache type = %s set error %+v", dictType.DictType, err)
+				continue
+			}
+			log.Printf("cache type = %s set result %s", dictType.DictType, result)
 		}
 	}
 	return nil
