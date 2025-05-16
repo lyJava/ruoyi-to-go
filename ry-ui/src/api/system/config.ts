@@ -82,6 +82,18 @@ export const delConfig = async (configId: string | string[]) => {
 };
 
 /**
+ * 刷新缓存
+ *
+ * @returns
+ */
+export const refreshCache = async () => {
+	return await request({
+		url: "/system/config/refreshCache",
+		method: "get",
+	});
+};
+
+/**
  * 清理参数缓存
  *
  * @returns

@@ -78,12 +78,12 @@ export default () => {
 
 	/** 键名前缀去除 */
 	const keyFormatter = (cacheKey: any) => {
-		return cacheKey.replace(nowCacheName.value, "");
+		return cacheKey.replace(`${nowCacheName.value}:`, "");
 	};
 
 	/** 查询缓存内容详细 */
 	const handleCacheValue = (cacheKey: any) => {
-		getCacheValue(nowCacheName.value, cacheKey).then((response: any) => {
+		getCacheValue(nowCacheName.value, keyFormatter(cacheKey)).then((response: any) => {
 			if (response.code === 200) {
 				cacheForm.value = response.data;
 			}

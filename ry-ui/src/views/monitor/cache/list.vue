@@ -51,6 +51,7 @@
 						>
 							<template #default="scope">
 								<el-link
+									v-if="scope.row.cacheName && !scope.row.cacheName.toLowerCase().includes('login')"
 									type="danger"
 									icon="delete"
                                     :underline="false"
@@ -105,7 +106,8 @@
 						>
 							<template #default="scope">
 								<el-link
-									type="warning"
+									v-if="scope.row && !scope.row.toLowerCase().includes('login')"
+									type="danger"
 									icon="delete"
                                     :underline="false"
 									@click="handleClearCacheKey(scope.row)"

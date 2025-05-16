@@ -85,12 +85,23 @@
 			</el-col>
 			<el-col :span="1.5">
 				<el-button
-					type="danger"
+					type="success"
 					plain
 					icon="refresh"
 					size="small"
+					@click="handleRefreshCache"
+					v-hasPermi="['system:config:cacheFresh']"
+					>刷新缓存</el-button
+				>
+			</el-col>
+			<el-col :span="1.5">
+				<el-button
+					type="danger"
+					plain
+					icon="delete"
+					size="small"
 					@click="handleClearCache"
-					v-hasPermi="['system:config:remove']"
+					v-hasPermi="['system:config:cacheRemove']"
 					>清理缓存</el-button
 				>
 			</el-col>
@@ -291,6 +302,6 @@ import Config from "@/api/request/system/config";
 const {
     loading, single, multiple, open, showSearch, total, configList, title, typeOptions, dateRange, queryParams, queryFormRef, form, formRef, rules, 
     getList, typeFormat, cancel,handleQuery, resetQuery, handleAdd, handleSelectionChange, handleUpdate, submitForm, handleDelete, handleExport, 
-    handleClearCache, pageTableRef, cleanSelect, 
+    handleRefreshCache, handleClearCache, pageTableRef, cleanSelect, 
 } = Config();
 </script>

@@ -1,5 +1,5 @@
 // prettier-ignore
-import { listConfig, getConfig, delConfig, addConfig, updateConfig, exportConfig, clearCache } from "@/api/system/config";
+import { listConfig, getConfig, delConfig, addConfig, updateConfig, exportConfig, clearCache, refreshCache } from "@/api/system/config";
 import { ElForm, ElTable } from "element-plus";
 import { displayIdArr, useComponentRef, useSafeInstance } from "@/utils/ruoyi";
 import { FormParam, QueryParam } from "./types";
@@ -183,11 +183,20 @@ export default () => {
 		// prettier-ignore
 		proxy.download('/system/config/exportByStream', {...queryParams}, `参数配置${new Date().getTime()}.xlsx`);
 	};
+
+	const handleRefreshCache = () => {
+		refreshCache().then((response: any) => {
+            if (response.code === 200) {
+                proxy.$modal.msgSuccess("刷新成功");
+            }
+		});
+	}
+
 	/** 清理缓存按钮操作 */
 	const handleClearCache = () => {
 		clearCache().then((response: any) => {
             if (response.code === 200) {
-                proxy.$modal.msgSuccess("清理成功");
+                proxy.$modal.msgSuccess("删除成功");
             }
 		});
 	};
@@ -205,6 +214,6 @@ export default () => {
     return {
         loading, single, multiple, open, showSearch, total, configList, title, typeOptions, dateRange, queryParams, queryFormRef, form, formRef, rules, 
         getList, typeFormat, cancel, reset, handleQuery, resetQuery, handleAdd, handleSelectionChange, handleUpdate, submitForm, handleDelete, 
-        handleExport, handleClearCache, pageTableRef, cleanSelect, 
+        handleExport, handleRefreshCache, handleClearCache, pageTableRef, cleanSelect, 
     };
 };
