@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"ry-go/business/domain"
 	"ry-go/common/request"
 	"ry-go/utils"
 	"strings"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 
@@ -169,6 +171,53 @@ func (impl *SysConfigDaoImpl) SelectConfigByKey(ctx context.Context, key string)
 		Find(&obj).Error; err != nil {
 		return nil, err
 	}
-
 	return obj, nil
+}
+
+func (impl *SysConfigDaoImpl) SelectConfigList(ctx context.Context) ([]*domain.SysConfig, error) {
+	var list []*domain.SysConfig
+	if err := impl.Gorm.WithContext(ctx).Model(&domain.SysConfig{}).Select("config_key", "config_value").Find(&list).Error; err != nil {
+		return nil, err
+	}
+	return list, nil
+}
+
+func (impl *SysConfigDaoImpl) RefreshConfigCache(ctx context.Context, list []*domain.SysConfig) error {
+	if len(list) < 0 {
+		return errors.New("数据为空，无法执行缓存刷新")
+	}
+	cacheKeyPrefix := "sys_config:"
+
+	for _, config := range list {
+		if config == nil {
+			continue
+		}
+		cacheKey := cacheKeyPrefix + config.ConfigKey
+		result, err := utils.Set(ctx, impl.RedisClient, cacheKey, config.ConfigValue, 1*time.Hour)
+		if err != nil {
+			return err
+		}
+		log.Printf("系统配置key==%s 缓存刷新结果===%s", cacheKey, result)
+	}
+
+	return nil
+}
+
+func (impl *SysConfigDaoImpl) ClearConfigCache(ctx context.Context, list []*domain.SysConfig) error {
+	if len(list) < 0 {
+		return errors.New("数据为空，无法执行缓存清理")
+	}
+	cacheKeyPrefix := "sys_config:"
+	for _, config := range list {
+		if config == nil {
+			continue
+		}
+		cacheKey := cacheKeyPrefix + config.ConfigKey
+		count, err := utils.Del(ctx, impl.RedisClient, cacheKey)
+		if err != nil {
+			return err
+		}
+		log.Printf("系统配置key==%s 缓存删除结果===%t", cacheKey, count > 0)
+	}
+	return nil
 }

@@ -12,5 +12,8 @@ func SysMonitorRouterInit(group *echo.Group, monitor *controller.SysMonitorContr
 	sysMonitorRouterGroup.GET("/online/list", monitor.OnlineListHandler)
 	sysMonitorRouterGroup.DELETE("/online/:uuid", monitor.OnlineForceLogoutHandler)
 	sysMonitorRouterGroup.GET("/server", monitor.ServerInfoHandler)
-
+	sysMonitorRouterGroup.GET("/cache/getNames", monitor.CacheNameListHandler)
+	sysMonitorRouterGroup.GET("/cache/getKeys/:key", monitor.CacheListByKeyHandler)
+	sysMonitorRouterGroup.GET("/cache/getValue/:prefix/:suffix", monitor.CacheDetailHandler)
+	sysMonitorRouterGroup.DELETE("/cache/clearCacheName/:key", monitor.CacheClearHandler)
 }

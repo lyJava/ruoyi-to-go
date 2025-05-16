@@ -16,4 +16,7 @@ type SysConfigService interface {
 	SelectPage(e echo.Context, param *request.ConfigPageParam) ([]*domain.SysConfig, int64, int64, error)
 	BatchDelete(e echo.Context, ids []any) (int64, error)
 	SelectConfigByKey(e echo.Context, key string) (*domain.SysConfig, error)
+	SelectConfigList(e echo.Context) ([]*domain.SysConfig, error)
+	RefreshConfigCache(e echo.Context, list []*domain.SysConfig) error
+	ClearConfigCache(e echo.Context, list []*domain.SysConfig) error
 }

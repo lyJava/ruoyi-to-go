@@ -55,3 +55,15 @@ func (s *SysConfigServiceImpl) BatchDelete(e echo.Context, ids []any) (int64, er
 func (s *SysConfigServiceImpl) SelectConfigByKey(e echo.Context, key string) (*domain.SysConfig, error) {
 	return s.SysConfigDao.SelectConfigByKey(e.Request().Context(), key)
 }
+
+func (s *SysConfigServiceImpl) SelectConfigList(e echo.Context) ([]*domain.SysConfig, error) {
+	return s.SysConfigDao.SelectConfigList(e.Request().Context())
+}
+
+func (s *SysConfigServiceImpl) RefreshConfigCache(e echo.Context, list []*domain.SysConfig) error {
+	return s.SysConfigDao.RefreshConfigCache(e.Request().Context(), list)
+}
+
+func (s *SysConfigServiceImpl) ClearConfigCache(e echo.Context, list []*domain.SysConfig) error {
+	return s.SysConfigDao.ClearConfigCache(e.Request().Context(), list)
+}

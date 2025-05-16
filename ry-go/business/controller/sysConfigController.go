@@ -2,6 +2,7 @@ package controller
 
 import (
 	"errors"
+	"github.com/spf13/cast"
 	"net/http"
 	"ry-go/business/domain"
 	"ry-go/business/service"
@@ -9,8 +10,6 @@ import (
 	"ry-go/common/request"
 	"ry-go/common/response"
 	"ry-go/utils"
-
-	"github.com/spf13/cast"
 
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
@@ -162,5 +161,33 @@ func (controller *SysConfigController) SelectByKeyHandler(c echo.Context) error 
 		return err
 	}
 	response.NewResponse(c, 200, "查询成功", configData)
+	return nil
+}
+
+func (controller *SysConfigController) RefreshCacheHandler(c echo.Context) error {
+	configList, err := controller.service.SelectConfigList(c)
+	if err != nil {
+		response.NewRespCodeErr(c, 500, err)
+		return err
+	}
+	if err = controller.service.RefreshConfigCache(c, configList); err != nil {
+		response.NewRespCodeErr(c, 500, err)
+		return err
+	}
+	response.NewRespCodeMsg(c, 200, "刷新成功")
+	return nil
+}
+
+func (controller *SysConfigController) ClearCacheHandler(c echo.Context) error {
+	configList, err := controller.service.SelectConfigList(c)
+	if err != nil {
+		response.NewRespCodeErr(c, 500, err)
+		return err
+	}
+	if err = controller.service.ClearConfigCache(c, configList); err != nil {
+		response.NewRespCodeErr(c, 500, err)
+		return err
+	}
+	response.NewRespCodeMsg(c, 200, "删除成功")
 	return nil
 }

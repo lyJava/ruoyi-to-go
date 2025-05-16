@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -11,6 +12,7 @@ import (
 	"ry-go/business/domain"
 	"ry-go/business/service"
 	"ry-go/business/service/serviceImpl"
+	"ry-go/common/model"
 	"ry-go/common/request"
 	"ry-go/common/response"
 	"ry-go/configuation"
@@ -158,7 +160,70 @@ func (ct *SysMonitorController) ServerInfoHandler(e echo.Context) error {
 	}
 	response.NewResponse(e, http.StatusOK, "操作成功", dataMap)
 	return nil
+}
 
+func (ct *SysMonitorController) CacheNameListHandler(e echo.Context) error {
+	var list []*model.Cache
+	list = append(list, &model.Cache{
+		Name:   "user:login",
+		Remark: "登录信息",
+	})
+	list = append(list, &model.Cache{
+		Name:   "sys_config",
+		Remark: "配置信息",
+	})
+	list = append(list, &model.Cache{
+		Name:   "sys_dict",
+		Remark: "字典信息",
+	})
+	response.NewResponse(e, http.StatusOK, "查询成功", list)
+	return nil
+}
+
+func (ct *SysMonitorController) CacheListByKeyHandler(e echo.Context) error {
+	cacheKey := e.Param("key")
+	if cacheKey == "" {
+		response.NewRespCodeMsg(e, http.StatusInternalServerError, "缓存的键不能为空")
+		return errors.New("缓存的键不能为空")
+	}
+	keyList, err := ct.Monitor.CacheListByKey(e, cacheKey)
+	if err != nil {
+		response.NewRespCodeErr(e, http.StatusInternalServerError, err)
+		return errors.New("缓存的键不能为空")
+	}
+	response.NewResponse(e, http.StatusOK, "查询成功", keyList)
+	return nil
+}
+
+func (ct *SysMonitorController) CacheDetailHandler(e echo.Context) error {
+	prefix := e.Param("prefix")
+	suffix := e.Param("suffix")
+	if prefix == "" && suffix == "" {
+		response.NewRespCodeMsg(e, http.StatusInternalServerError, "缓存参数不能为空")
+		return errors.New("缓存参数不能为空")
+	}
+	cache, err := ct.Monitor.CacheDetail(e, prefix, suffix)
+	if err != nil {
+		response.NewRespCodeErr(e, http.StatusInternalServerError, err)
+		return err
+	}
+	response.NewResponse(e, http.StatusOK, "查询成功", cache)
+	return nil
+}
+
+func (ct *SysMonitorController) CacheClearHandler(e echo.Context) error {
+	prefix := e.Param("key")
+	if prefix == "" {
+		response.NewRespCodeMsg(e, http.StatusInternalServerError, "缓存的键不能为空")
+		return errors.New("缓存的键不能为空")
+	}
+
+	if err := ct.Monitor.CacheClear(e, prefix); err != nil {
+		response.NewRespCodeErr(e, http.StatusInternalServerError, err)
+		return err
+	}
+	response.NewRespCodeMsg(e, http.StatusOK, "删除成功")
+	return nil
 }
 
 func filterUsers(users []*domain.LoginUser, username, ip string) []*domain.LoginUser {

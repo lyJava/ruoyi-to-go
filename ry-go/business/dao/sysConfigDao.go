@@ -15,4 +15,7 @@ type SysConfigDao interface {
 	SelectPage(ctx context.Context, param *request.ConfigPageParam) ([]*domain.SysConfig, int64, int64, error)
 	BatchDelete(ctx context.Context, ids []any) (int64, error)
 	SelectConfigByKey(ctx context.Context, key string) (*domain.SysConfig, error)
+	SelectConfigList(ctx context.Context) ([]*domain.SysConfig, error)
+	RefreshConfigCache(ctx context.Context, list []*domain.SysConfig) error
+	ClearConfigCache(ctx context.Context, list []*domain.SysConfig) error
 }

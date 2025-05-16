@@ -139,7 +139,7 @@ func MGet(ctx context.Context, client *redis.Client, keys ...string) ([]any, err
 // GetValuesByPrefix 根据前缀获取所有键和对应的值
 func GetValuesByPrefix(ctx context.Context, client *redis.Client, prefix string) ([]string, error) {
 	// 1. 用 SCAN 安全查询所有键
-	keys, err := scanKeysByPrefix(ctx, client, prefix)
+	keys, err := ScanKeysByPrefix(ctx, client, prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -162,8 +162,8 @@ func GetValuesByPrefix(ctx context.Context, client *redis.Client, prefix string)
 	return result, nil
 }
 
-// SCAN 迭代安全获取匹配前缀的键
-func scanKeysByPrefix(ctx context.Context, client *redis.Client, prefix string) ([]string, error) {
+// ScanKeysByPrefix 迭代安全获取匹配前缀的键
+func ScanKeysByPrefix(ctx context.Context, client *redis.Client, prefix string) ([]string, error) {
 	var (
 		cursor uint64
 		keys   []string
@@ -235,6 +235,14 @@ func isFloat(s string) bool {
 //goland:noinspection GoUnusedExportedFunction
 func Del(ctx context.Context, client *redis.Client, keys ...string) (int64, error) {
 	return client.Del(ctx, keys...).Result()
+}
+
+func DelByKeyList(ctx context.Context, client *redis.Client, prefix string) (int64, error) {
+	keyList, err := ScanKeysByPrefix(ctx, client, prefix)
+	if err != nil {
+		return 0, err
+	}
+	return client.Del(ctx, keyList...).Result()
 }
 
 // SetWithTimeout 带默认超时的 Set

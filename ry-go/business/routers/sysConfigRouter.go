@@ -16,4 +16,6 @@ func SysConfigRouterInit(group *echo.Group, sysConfig *controller.SysConfigContr
 	sysConfigRouterGroup.GET("/:id", sysConfig.SelectOneHandler)
 	sysConfigRouterGroup.DELETE("/:id", sysConfig.BatchDeleteHandler)
 	sysConfigRouterGroup.GET("/configKey/:key", sysConfig.SelectByKeyHandler)
+	sysConfigRouterGroup.GET("/refreshCache", sysConfig.RefreshCacheHandler)
+	sysConfigRouterGroup.DELETE("/clearCache", sysConfig.ClearCacheHandler)
 }
