@@ -229,17 +229,19 @@ func (impl *SysDictTypeDaoImpl) RefreshCache(ctx context.Context) error {
 				continue
 			}
 
-			dataList, err := impl.DataDao.SelectDictDataByType(ctx, dictType.DictType)
+			dictTypeStr := dictType.DictType
+
+			dataList, err := impl.DataDao.SelectDictDataByType(ctx, dictTypeStr)
 			if err != nil {
 				log.Println("failed to load dict data")
 			}
 
 			if len(dataList) == 0 {
-				log.Printf("cache type = %s data list length is 0, skip it", dictType.DictType)
+				log.Printf("cache type = %s data list length is 0, skip it", dictTypeStr)
 				continue
 			}
 
-			result, err := utils.Set(ctx, impl.RedisClient, fmt.Sprintf("%s%s", "sys_dict:", dictType.DictType), dataList, time.Hour)
+			result, err := utils.Set(ctx, impl.RedisClient, fmt.Sprintf("sys_dict:%s", dictTypeStr), dataList, time.Hour)
 			if err != nil {
 				log.Printf("cache type = %s set error %+v", dictType.DictType, err)
 				continue

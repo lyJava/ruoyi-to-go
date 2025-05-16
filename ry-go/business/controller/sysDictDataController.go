@@ -153,7 +153,7 @@ func (controller *SysDictDataController) SelectDictDataByTypeHandler(c echo.Cont
 
 	var dataList []*domain.SysDictData
 
-	cacheList, _ := utils.GetTyped(c.Request().Context(), controller.redisClient, dictType, dataList)
+	cacheList, _ := utils.GetTyped(c.Request().Context(), controller.redisClient, "sys_dict:"+dictType, dataList)
 
 	if len(cacheList) <= 0 {
 		dataList, err := controller.service.SelectDictDataByType(c, dictType)
@@ -163,7 +163,7 @@ func (controller *SysDictDataController) SelectDictDataByTypeHandler(c echo.Cont
 		}
 
 		if len(dataList) > 0 {
-			_, err = utils.Set(c.Request().Context(), controller.redisClient, dictType, dataList, time.Hour)
+			_, err = utils.Set(c.Request().Context(), controller.redisClient, "sys_dict:"+dictType, dataList, time.Hour)
 			if err != nil {
 				response.NewRespCodeErr(c, 500, err)
 				return err

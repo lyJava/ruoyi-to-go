@@ -16,4 +16,5 @@ func SysMonitorRouterInit(group *echo.Group, monitor *controller.SysMonitorContr
 	sysMonitorRouterGroup.GET("/cache/getKeys/:key", monitor.CacheListByKeyHandler)
 	sysMonitorRouterGroup.GET("/cache/getValue/:prefix/:suffix", monitor.CacheDetailHandler)
 	sysMonitorRouterGroup.DELETE("/cache/clearCacheName/:key", monitor.CacheClearHandler)
+	sysMonitorRouterGroup.DELETE("/cache/clearCacheAll", monitor.CacheClearAllHandler)
 }

@@ -226,6 +226,15 @@ func (ct *SysMonitorController) CacheClearHandler(e echo.Context) error {
 	return nil
 }
 
+func (ct *SysMonitorController) CacheClearAllHandler(e echo.Context) error {
+	if err := ct.Monitor.CacheClearAll(e); err != nil {
+		response.NewRespCodeErr(e, http.StatusInternalServerError, err)
+		return err
+	}
+	response.NewRespCodeMsg(e, http.StatusOK, "删除成功")
+	return nil
+}
+
 func filterUsers(users []*domain.LoginUser, username, ip string) []*domain.LoginUser {
 	if username == "" && ip == "" {
 		return users

@@ -89,3 +89,25 @@ func (impl *SysMonitorServiceImpl) CacheClear(e echo.Context, prefix string) err
 	log.Printf("成功删除缓存数量===%d", count)
 	return nil
 }
+
+func (impl *SysMonitorServiceImpl) CacheClearAll(e echo.Context) error {
+	sysConfigKeyList, err := utils.ScanKeysByPrefix(e.Request().Context(), impl.RedisClient, "sys_config:")
+	if err != nil {
+		return errors.New("获取系统配置缓存key失败")
+	}
+	sysDictKeyList, err := utils.ScanKeysByPrefix(e.Request().Context(), impl.RedisClient, "sys_dict:")
+	if err != nil {
+		return errors.New("获取数据字典缓存key失败")
+	}
+
+	var keyList []string
+	keyList = append(keyList, sysConfigKeyList...)
+	keyList = append(keyList, sysDictKeyList...)
+
+	count, err := utils.Del(e.Request().Context(), impl.RedisClient, keyList...)
+	if err != nil {
+		return errors.New("获取数据字典缓存key失败")
+	}
+	log.Printf("成功删除缓存数量===%d", count)
+	return nil
+}

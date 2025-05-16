@@ -13,4 +13,5 @@ type SysMonitorService interface {
 	CacheListByKey(e echo.Context, cacheKey string) ([]string, error)
 	CacheDetail(e echo.Context, prefix, suffix string) (*model.Cache, error)
 	CacheClear(e echo.Context, prefix string) error
+	CacheClearAll(e echo.Context) error
 }
