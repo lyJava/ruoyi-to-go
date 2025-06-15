@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log"
 	"ry-go/business/dao"
 	"ry-go/business/domain"
 	"ry-go/common/request"
@@ -551,8 +552,10 @@ func (userDao *SysUserDaoImpl) Login(ctx context.Context, user *domain.UserLogin
 		return nil, errors.New("密码格式无效")
 	}
 
+	privateKeyStr := configuation.RsaConfig.Rsa.Key.Private
+	log.Printf("私钥===%s", privateKeyStr)
 	// 通过密钥文件解密
-	decryptPwdByte, err := utils.RsaDecrypt([]byte(configuation.RsaConfig.Rsa.Key.Private), encodePwdByte)
+	decryptPwdByte, err := utils.RsaDecrypt([]byte(privateKeyStr), encodePwdByte)
 
 	if err != nil {
 		return nil, errors.New("系统错误，请稍后再试")
