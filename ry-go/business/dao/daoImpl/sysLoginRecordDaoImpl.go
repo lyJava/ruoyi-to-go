@@ -133,3 +133,39 @@ func (impl *SysLoginRecordDaoImpl) SelectLastRecode(ctx context.Context, usernam
 	}
 	return record, nil
 }
+
+func (impl *SysLoginRecordDaoImpl) SelectAll(ctx context.Context) ([]*domain.SysLoginRecord, error) {
+	var (
+		list    []*domain.SysLoginRecord
+		allData []*domain.SysLoginRecord
+		count   int64
+		page    int = 1
+		size    int = 2000
+	)
+	db := impl.Gorm.WithContext(ctx).Model(&domain.SysLoginRecord{})
+	if err := db.Count(&count).Error; err != nil {
+		return nil, fmt.Errorf("获取用户所有登录总条数失败")
+	}
+
+	if int64(size) >= count {
+		if err := db.Find(&allData).Error; err != nil {
+			return nil, fmt.Errorf("获取用户所有登录分页失败")
+		}
+		return allData, nil
+	}
+
+	for {
+		list = list[:0]
+		if err := db.Limit(size).Offset((page - 1) * size).Find(&list).Error; err != nil {
+			return nil, fmt.Errorf("获取用户所有登录分页失败")
+		}
+		
+		if len(list) == 0 {
+			break
+		}
+		allData = append(allData, list...)
+		page++
+	}
+
+	return allData, nil
+}

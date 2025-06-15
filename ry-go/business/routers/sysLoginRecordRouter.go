@@ -17,4 +17,5 @@ func SysLoginRecordRouterInit(group *echo.Group, sysLoginRecord *controller.SysL
 	sysLoginRecordRouterGroup.POST("/batchDelete", sysLoginRecord.BatchDeleteHandler)
 	sysLoginRecordRouterGroup.DELETE("/:id", sysLoginRecord.BatchDeleteHandler)
 	sysLoginRecordRouterGroup.GET("/lastLogin", sysLoginRecord.SelectLastLoginRecodeHandler)
+	sysLoginRecordRouterGroup.GET("/export", sysLoginRecord.DownloadExcelBufferHandler)
 }

@@ -17,4 +17,5 @@ type SysLoginRecordService interface {
 	SelectPage(e echo.Context, param *request.SysNoticePageParam) ([]*domain.SysLoginRecord, int64, int64, error)
 	BatchDelete(e echo.Context, ids []any) (int64, error)
 	SelectLastRecode(e echo.Context, username string) (*domain.SysLoginRecord, error)
+	SelectAll(e echo.Context) ([]*domain.SysLoginRecord, error)
 }

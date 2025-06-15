@@ -15,4 +15,5 @@ type SysLoginRecordDao interface {
 	SelectPage(ctx context.Context, param *request.SysNoticePageParam) ([]*domain.SysLoginRecord, int64, int64, error)
 	BatchDelete(ctx context.Context, ids []any) (int64, error)
 	SelectLastRecode(ctx context.Context, username string) (*domain.SysLoginRecord, error)
+	SelectAll(ctx context.Context) ([]*domain.SysLoginRecord, error)
 }

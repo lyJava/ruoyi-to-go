@@ -1,12 +1,14 @@
 package utils
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strconv"
+	"time"
 
 	"github.com/spf13/cast"
 	"github.com/xuri/excelize/v2"
@@ -206,6 +208,59 @@ func WriteDataToExcel[T any](fileName string, headers []string, list []T) (strin
 	zap.L().Sugar().Infof("获取文件绝对路径===%s", filePath)
 	return filePath, nil
 }
+
+func WriteDataToExcelBuffer[T any](headers []string, list []T) (*bytes.Buffer, error) {
+	if len(list) == 0 {
+		return nil, fmt.Errorf("数据列表为空，无法导出")
+	}
+	f := excelize.NewFile()
+	defer func() { _ = f.Close() }()
+
+	sheet := "Sheet1"
+	// 写入表头
+	for i, header := range headers {
+		cell := indexToColumn(i) + "1"
+		f.SetCellValue(sheet, cell, header)
+		f.SetColWidth(sheet, indexToColumn(i), indexToColumn(i), float64(len(header)*2))
+	}
+
+	// 写入数据
+	for rowIndex, record := range list {
+		v := reflect.ValueOf(record)
+		if v.Kind() == reflect.Ptr {
+			v = v.Elem()
+		}
+		for colIndex := range v.NumField() {
+			cell := indexToColumn(colIndex) + strconv.Itoa(rowIndex+2)
+
+			field := v.Field(colIndex)
+			var value string
+			switch field.Kind() {
+			case reflect.Struct:
+				if t, ok := field.Interface().(time.Time); ok {
+					value = t.Format("2006-01-02 15:04:05")
+				} else {
+					value = fmt.Sprintf("%v", field.Interface())
+				}
+			default:
+				value = fmt.Sprintf("%v", field.Interface())
+			}
+
+			f.SetCellValue(sheet, cell, value)
+			f.SetColWidth(sheet, indexToColumn(colIndex), indexToColumn(colIndex), float64(len(value)+5))
+		}
+	}
+
+	// 写入到内存缓冲区
+	//buf := new(bytes.Buffer)
+	// 预分配1MB，可能提升速度并不明显
+	var buf = bytes.NewBuffer(make([]byte, 0, 1<<20)) 
+	if err := f.Write(buf); err != nil {
+		return nil, err
+	}
+	return buf, nil
+}
+
 
 // indexToColumn 将索引转换为 Excel 列名
 func indexToColumn(index int) string {

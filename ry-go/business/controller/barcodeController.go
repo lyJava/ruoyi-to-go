@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"ry-go/common/response"
 	"ry-go/utils"
-	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/cast"
@@ -35,19 +34,4 @@ func (controller *BarcodeController) CodeHandler(c echo.Context) error {
 		return err
 	}
 	return nil
-}
-
-// GlobalDeleteHandler 全局删除处理器
-func GlobalDeleteHandler(c echo.Context) ([]any, error) {
-	param := c.Param("id")
-	if param == "" {
-		return nil, errors.New("参数验证失败")
-	}
-
-	ids := strings.Split(param, ",")
-	if len(ids) == 0 {
-		return nil, errors.New("参数验证失败")
-	}
-
-	return utils.StringSliceToAnySlice(ids), nil
 }

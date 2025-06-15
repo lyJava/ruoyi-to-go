@@ -56,3 +56,8 @@ func (s *SysLoginRecordServiceImpl) BatchDelete(e echo.Context, ids []any) (int6
 func (s *SysLoginRecordServiceImpl) SelectLastRecode(e echo.Context, username string) (*domain.SysLoginRecord, error) {
 	return s.SysLoginRecordDao.SelectLastRecode(e.Request().Context(), username)
 }
+
+
+func (s *SysLoginRecordServiceImpl)SelectAll(e echo.Context) ([]*domain.SysLoginRecord, error) {
+	return s.SysLoginRecordDao.SelectAll(e.Request().Context())
+}
