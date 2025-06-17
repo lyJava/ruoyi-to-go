@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"ry-go/business/dao/daoImpl"
@@ -62,11 +64,13 @@ func main() {
 		}
 	}(configuation.ZapLog)
 
+	port := strconv.Itoa(configuation.ServerConfig.Server.Port)
+
 	// 修复点：在独立协程启动服务器
 	serverErr := make(chan error)
 	go func() {
 		// echoRequestRouter(app)
-		port := strconv.Itoa(configuation.ServerConfig.Server.Port)
+
 		log.Printf("echo服务启动端口=====:%s", port)
 		serverErr <- app.Start(":" + port)
 	}()
@@ -76,6 +80,9 @@ func main() {
 
 	select {
 	case err = <-serverErr:
+		if isAddrInUse(err) {
+			log.Fatalf("echo服务启动端口%s被占用了", port)
+		}
 		log.Fatal("服务意外退出")
 	case <-quit:
 		log.Println("收到关闭信号")
@@ -89,13 +96,31 @@ func main() {
 		}
 		log.Println("服务已优雅退出")
 	}
+}
 
-	// 阻塞主程序直到收到信号
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
-	<-sig
-	log.Println("Main program exiting")
+func checkPortAvailability(port string) error {
+	addr := net.JoinHostPort("", port)
+	ln, err := net.Listen("tcp", addr)
+	if err != nil {
+		// 精确识别端口占用错误
+		if isAddrInUse(err) {
+			return fmt.Errorf("端口 %s 已被占用", port)
+		}
+		return fmt.Errorf("端口检测失败: %w", err)
+	}
+	_ = ln.Close()
+	return nil
+}
 
+func isAddrInUse(err error) bool {
+	var opErr *net.OpError
+	if errors.As(err, &opErr) {
+		var sysErr syscall.Errno
+		if errors.As(opErr.Err, &sysErr) {
+			return sysErr == syscall.EADDRINUSE
+		}
+	}
+	return false
 }
 
 func dictTypeCacheInit(db *gorm.DB, client *redis.Client) {
