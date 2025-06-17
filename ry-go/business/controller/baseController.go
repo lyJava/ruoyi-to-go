@@ -161,8 +161,8 @@ func GlobalDeleteHandler(c echo.Context) ([]any, error) {
 	return utils.StringSliceToAnySlice(ids), nil
 }
 
-func DownloadExcelBuffer[T any](c echo.Context, fileName string, headers []string, data []T) error {
-	excelBuffer, err := utils.WriteDataToExcelBuffer(headers, data)
+func DownloadExcelBuffer[T any](c echo.Context, fileName, sheetName string, headers []string, data []T, headerColor bool) error {
+	excelBuffer, err := utils.WriteDataToExcelBuffer(headers, data, sheetName, headerColor)
 	if err != nil {
 		response.NewRespCodeErr(c, 500, err)
 		return err
