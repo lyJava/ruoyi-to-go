@@ -19,4 +19,5 @@ type SysUserDao interface {
 	SelectList(ctx context.Context, limit, offset int64) ([]*domain.UserForExcel, error)
 	GetTotalCount(ctx context.Context) (int64, error)
 	Login(ctx context.Context, user *domain.UserLogin) (*domain.User, error)
+	SelectAll(ctx context.Context) ([]*domain.UserForExcel, error)
 }

@@ -415,3 +415,14 @@ func (controller *DeptController) RoleDeptTreeSelectHandler(c echo.Context) erro
 	response.NewResponse(c, http.StatusOK, "查询成功", dataMap)
 	return nil
 }
+
+// DownloadExcelBufferHandler 导出Excel，使用缓冲流
+func (controller *DeptController) DownloadExcelBufferHandler(c echo.Context) error {
+	data, err := controller.service.SelectAll(c)
+	if err != nil {
+		response.NewRespCodeErr(c, 500, err)
+		return err
+	}
+	headers := []string{"ID", "父节点ID", "组级列表", "部门名称", "排序", "部门状态（0正常 1停用）", "创建人", "创建时间", "修改人", "修改时间", "备注信息", "负责人", "手机", "邮箱", "是否删除"}
+	return DownloadExcelBuffer(c, "部门信息_"+time.Now().Format("20060102150405")+".xlsx", "部门信息", headers, data, true)
+}

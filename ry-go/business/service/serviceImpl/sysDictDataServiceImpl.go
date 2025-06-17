@@ -48,3 +48,7 @@ func (s *SysDictDataServiceImpl) BatchDelete(e echo.Context, ids []any) (int64, 
 func (s *SysDictDataServiceImpl) SelectDictDataByType(e echo.Context, dictType string) ([]*domain.SysDictData, error) {
 	return s.SysDictDataDao.SelectDictDataByType(e.Request().Context(), dictType)
 }
+
+func (s *SysDictDataServiceImpl) SelectAll(e echo.Context) ([]*domain.SysDictData, error) {
+	return s.SysDictDataDao.SelectAll(e.Request().Context())
+}

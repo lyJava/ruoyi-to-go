@@ -9,6 +9,7 @@ import (
 	"ry-go/common/request"
 	"ry-go/common/response"
 	"ry-go/utils"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/cast"
@@ -177,4 +178,15 @@ func (controller *SysNoticeController) BatchDeleteHandler(c echo.Context) error 
 	}
 	response.NewResponse(c, 200, "批量删除成功", count)
 	return nil
+}
+
+// DownloadExcelBufferHandler 导出Excel，使用缓冲流
+func (controller *SysNoticeController) DownloadExcelBufferHandler(c echo.Context) error {
+	data, err := controller.service.SelectAll(c)
+	if err != nil {
+		response.NewRespCodeErr(c, 500, err)
+		return err
+	}
+	headers := []string{"主键ID", "标题", "类型", "内容", "状态", "创建人", "创建时间", "修改人", "修改时间", "备注信息"}
+	return DownloadExcelBuffer(c, "通知公告_"+time.Now().Format("20060102150405")+".xlsx", "通知公告", headers, data, true)
 }

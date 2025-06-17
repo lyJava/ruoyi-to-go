@@ -18,4 +18,5 @@ type SysConfigDao interface {
 	SelectConfigList(ctx context.Context) ([]*domain.SysConfig, error)
 	RefreshConfigCache(ctx context.Context, list []*domain.SysConfig) error
 	ClearConfigCache(ctx context.Context, list []*domain.SysConfig) error
+	SelectAll(ctx context.Context) ([]*domain.SysConfig, error)
 }

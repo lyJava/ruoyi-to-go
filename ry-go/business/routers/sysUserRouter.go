@@ -22,4 +22,5 @@ func SysUserRouterInit(group *echo.Group, userController *controller.UserControl
 	sysUserRouterGroup.GET("/captcha/verify", userController.VerifyCaptchaHandler)
 	sysUserRouterGroup.GET("/captcha/redis", userController.CaptchaRedisHandler)
 	sysUserRouterGroup.GET("/captcha/redis/verify", userController.VerifyCaptchaRedisHandler)
+	sysUserRouterGroup.GET("/export", userController.DownloadExcelBufferHandler)
 }

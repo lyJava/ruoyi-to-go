@@ -17,4 +17,5 @@ func SysPostRouterInit(group *echo.Group, sysPost *controller.SysPostController)
 	sysPostRouterGroup.POST("/batchDelete", sysPost.BatchDeleteHandler)
 	sysPostRouterGroup.DELETE("/:id", sysPost.BatchDeleteHandler)
 	sysPostRouterGroup.GET("/selectAll", sysPost.SelectAllHandler)
+	sysPostRouterGroup.GET("/export", sysPost.DownloadExcelBufferHandler)
 }

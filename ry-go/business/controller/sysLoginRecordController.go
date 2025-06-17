@@ -191,7 +191,6 @@ func (controller *SysLoginRecordController) SelectLastLoginRecodeHandler(c echo.
 	return nil
 }
 
-
 // DownloadExcelBufferHandler 导出Excel，使用缓冲流
 func (controller *SysLoginRecordController) DownloadExcelBufferHandler(c echo.Context) error {
 	data, err := controller.recordService.SelectAll(c)
@@ -200,5 +199,5 @@ func (controller *SysLoginRecordController) DownloadExcelBufferHandler(c echo.Co
 		return err
 	}
 	headers := []string{"ID", "账号", "登陆IP地址", "登陆地点", "浏览器类型", "操作系统", "登录状态", "提示消息", "访问时间", "登录凭证"}
-	return DownloadExcelBuffer(c, "登陆日志_" + time.Now().Format("20060102150405") + ".xlsx", headers, data)
+	return DownloadExcelBuffer(c, "登陆日志_"+time.Now().Format("20060102150405")+".xlsx", "登陆日志", headers, data, true)
 }

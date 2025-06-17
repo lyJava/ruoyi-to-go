@@ -10,6 +10,7 @@ import (
 	"ry-go/common/request"
 	"ry-go/common/response"
 	"ry-go/utils"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/cast"
@@ -311,4 +312,15 @@ func (controller *SysRoleController) DataScopeHandler(c echo.Context) error {
 	}
 	response.NewRespCodeMsg(c, 200, fmt.Sprintf("操作成功，更新了：%d条数据", result))
 	return nil
+}
+
+// DownloadExcelBufferHandler 导出Excel，使用缓冲流
+func (controller *SysRoleController) DownloadExcelBufferHandler(c echo.Context) error {
+	data, err := controller.service.SelectAll(c)
+	if err != nil {
+		response.NewRespCodeErr(c, 500, err)
+		return err
+	}
+	headers := []string{"ID", "角色名称", "权限字符", "排序", "数据范围", "菜单树选择项是否关联显示", "部门树选择项是否关联显示", "角色状态（0正常 1停用）", "删除标志（0代表存在 2代表删除）", "创建人", "创建时间", "修改人", "修改时间", "备注信息"}
+	return DownloadExcelBuffer(c, "角色信息_"+time.Now().Format("20060102150405")+".xlsx", "角色信息", headers, data, true)
 }

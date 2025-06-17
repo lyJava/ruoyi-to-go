@@ -79,3 +79,7 @@ func (us *SysUserServiceImpl) GetTotalCount(e echo.Context) (int64, error) {
 func (us *SysUserServiceImpl) Login(e echo.Context, user *domain.UserLogin) (*domain.User, error) {
 	return us.UserDao.Login(e.Request().Context(), user)
 }
+
+func (us *SysUserServiceImpl)SelectAll(c echo.Context)([]*domain.UserForExcel, error){
+	return us.UserDao.SelectAll(c.Request().Context())
+}

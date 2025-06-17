@@ -54,3 +54,7 @@ func (dp *SysNoticeServiceImpl) BatchDelete(e echo.Context, ids []any) (int64, e
 	}
 	return dp.NoticeDao.BatchDelete(e.Request().Context(), ids)
 }
+
+func (dp *SysNoticeServiceImpl) SelectAll(e echo.Context) ([]*domain.SysNotice, error) {
+	return dp.NoticeDao.SelectAll(e.Request().Context())
+}

@@ -19,4 +19,5 @@ type SysUserService interface {
 	SelectList(e echo.Context, limit, offset int64) ([]*domain.UserForExcel, error)
 	GetTotalCount(e echo.Context) (int64, error)
 	Login(e echo.Context, user *domain.UserLogin) (*domain.User, error)
+	SelectAll(c echo.Context)([]*domain.UserForExcel, error)
 }

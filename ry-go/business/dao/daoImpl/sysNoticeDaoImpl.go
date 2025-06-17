@@ -156,6 +156,51 @@ func (impl *SysNoticeDaoImpl) BatchDelete(ctx context.Context, ids []any) (int64
 	return result.RowsAffected, nil
 }
 
+func (impl *SysNoticeDaoImpl) SelectAll(ctx context.Context) ([]*domain.SysNotice, error) {
+	var (
+		list    []*domain.SysNotice
+		allData []*domain.SysNotice
+		count   int64
+		page    = 1
+		size    = 2000
+	)
+	db := impl.Gorm.WithContext(ctx).Model(&domain.SysNotice{})
+	if err := db.Count(&count).Error; err != nil {
+		zap.L().Sugar().Errorf("获取通知公告总条数错误:%+v", err)
+		return nil, errors.New("获取通知公告总条数失败")
+	}
+	zap.L().Sugar().Infof("获取通知公告总条数===%d,当前分页批数===%d", count, size)
+
+	// 分页大小大于或等于总条数，则直接一次性查询
+	if int64(size) >= count {
+		if err := db.Find(&allData).Error; err != nil {
+			zap.L().Sugar().Errorf("获取通知公告分页错误:%+v", err)
+			return nil, errors.New("获取通知公告分页失败")
+		}
+		zap.L().Sugar().Infof("分页大小大于或等于总条数一次性查询所有数据的条数===%d", len(allData))
+		return allData, nil
+	}
+
+	for {
+		list = list[:0]
+		if err := db.Limit(size).Offset((page - 1) * size).Find(&list).Error; err != nil {
+			zap.L().Sugar().Errorf("获取通知公告分页错误:%+v", err)
+			return nil, errors.New("获取通知公告分页失败")
+		}
+
+		zap.L().Sugar().Infof("第%d次通知公告分页条数===%d", page, len(list))
+
+		if len(list) == 0 {
+			zap.L().Sugar().Infof("第%d次通知公告分页条数为0退出循环", page)
+			// 无更多数据，退出循环
+			break
+		}
+		allData = append(allData, list...)
+		page++
+	}
+	return allData, nil
+}
+
 // PageParamOrder 分页排序
 //
 // 参数

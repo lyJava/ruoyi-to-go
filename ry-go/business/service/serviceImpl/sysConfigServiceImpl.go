@@ -67,3 +67,7 @@ func (s *SysConfigServiceImpl) RefreshConfigCache(e echo.Context, list []*domain
 func (s *SysConfigServiceImpl) ClearConfigCache(e echo.Context, list []*domain.SysConfig) error {
 	return s.SysConfigDao.ClearConfigCache(e.Request().Context(), list)
 }
+
+func (s *SysConfigServiceImpl) SelectAll(e echo.Context) ([]*domain.SysConfig, error) {
+	return s.SysConfigDao.SelectAll(e.Request().Context())
+}

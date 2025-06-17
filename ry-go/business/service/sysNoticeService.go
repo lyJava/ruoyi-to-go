@@ -15,4 +15,5 @@ type SysNoticeService interface {
 	SelectById(e echo.Context, id int64) (*domain.SysNotice, error)
 	SelectPage(e echo.Context, param *request.SysNoticePageParam) ([]*domain.SysNotice, int64, int64, error)
 	BatchDelete(e echo.Context, ids []any) (int64, error)
+	SelectAll(e echo.Context) ([]*domain.SysNotice, error)
 }

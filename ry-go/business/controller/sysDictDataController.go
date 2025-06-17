@@ -178,3 +178,15 @@ func (controller *SysDictDataController) SelectDictDataByTypeHandler(c echo.Cont
 
 	return nil
 }
+
+
+// DownloadExcelBufferHandler 导出Excel，使用缓冲流
+func (controller *SysDictDataController) DownloadExcelBufferHandler(c echo.Context) error {
+	data, err := controller.service.SelectAll(c)
+	if err != nil {
+		response.NewRespCodeErr(c, 500, err)
+		return err
+	}
+	headers := []string{"字典ID", "排序", "字典标签", "字典键值", "字典类型", "样式属性", "表格回显样式", "是否默认", "字典状态（0正常 1停用）", "创建人", "创建时间", "修改人", "修改时间", "备注信息"}
+	return DownloadExcelBuffer(c, "字典数据_"+time.Now().Format("20060102150405")+".xlsx", "字典数据", headers, data, true)
+}

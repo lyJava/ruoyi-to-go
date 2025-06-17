@@ -68,6 +68,7 @@ type UserForExcel struct {
 	UpdateTime string `json:"updateTime,omitempty" excel:"yes"`                      // 更新时间
 	Remarks    string `json:"remarks,omitempty" excel:"yes"`                         // 备注
 	DelFlag    string `json:"delFlag,omitempty" excel:"yes"`                         // 是否删除(0:正常；1:删除)
+	DeptName   string `gorm:"-" json:"DeptName,string,omitempty" excel:"yes"`        // 部门名称
 }
 
 // UserLogin 用户登陆

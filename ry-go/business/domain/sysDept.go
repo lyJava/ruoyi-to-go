@@ -8,7 +8,6 @@ type Dept struct {
 	DeptName   string `gorm:"column:dept_name" json:"deptName"`                    // 部门名称
 	OrderNum   int64  `gorm:"column:order_num" json:"orderNum"`                    // 部门排序
 	DeptStatus string `gorm:"column:dept_status" json:"deptStatus"`                // 部门状态（0正常 1停用）
-	CreateBy   string `gorm:"column:create_by" json:"createBy"`                    // 创建人
 	BaseDomain
 	Leader     string  `gorm:"column:leader" json:"leader"`    // 负责人
 	Phone      string  `gorm:"column:phone" json:"phone"`      // 手机

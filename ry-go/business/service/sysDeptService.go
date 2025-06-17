@@ -24,4 +24,5 @@ type SysDeptService interface {
 	BuildDeptTree(list []*domain.Dept) ([]*domain.Dept, error)
 	BuildDeptTreeSelect(list []*domain.Dept) []*domain.TreeSelect
 	SelectListByRoleId(e echo.Context, roleId int64) ([]int64, error)
+	SelectAll(e echo.Context) ([]*domain.Dept, error)
 }

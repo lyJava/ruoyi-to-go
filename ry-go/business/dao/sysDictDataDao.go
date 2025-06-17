@@ -15,4 +15,5 @@ type SysDictDataDao interface {
 	SelectPage(ctx context.Context, param *request.DictDataPageParam) ([]*domain.SysDictData, int64, int64, error)
 	BatchDelete(ctx context.Context, ids []any) (int64, error)
 	SelectDictDataByType(ctx context.Context, dictType string) ([]*domain.SysDictData, error)
+	SelectAll(ctx context.Context) ([]*domain.SysDictData, error)
 }

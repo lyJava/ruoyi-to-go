@@ -43,4 +43,5 @@ type SysDeptDao interface {
 	BuildDeptTree(list []*domain.Dept) ([]*domain.Dept, error)
 	BuildDeptTreeSelect(list []*domain.Dept) []*domain.TreeSelect
 	SelectListByRoleId(ctx context.Context, roleId int64) ([]int64, error)
+	SelectAll(ctx context.Context) ([]*domain.Dept, error)
 }

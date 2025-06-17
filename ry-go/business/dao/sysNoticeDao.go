@@ -14,4 +14,5 @@ type SysNoticeDao interface {
 	SelectById(ctx context.Context, id int64) (*domain.SysNotice, error)
 	SelectPage(ctx context.Context, param *request.SysNoticePageParam) ([]*domain.SysNotice, int64, int64, error)
 	BatchDelete(ctx context.Context, ids []any) (int64, error)
+	SelectAll(ctx context.Context) ([]*domain.SysNotice, error)
 }

@@ -16,4 +16,5 @@ type SysDictDataService interface {
 	SelectPage(e echo.Context, param *request.DictDataPageParam) ([]*domain.SysDictData, int64, int64, error)
 	BatchDelete(e echo.Context, ids []any) (int64, error)
 	SelectDictDataByType(e echo.Context, dictType string) ([]*domain.SysDictData, error)
+	SelectAll(e echo.Context) ([]*domain.SysDictData, error)
 }

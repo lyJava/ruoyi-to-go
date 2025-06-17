@@ -23,4 +23,5 @@ func SysDeptRouterInit(group *echo.Group, dept *controller.DeptController) {
 	sysDeptRouterGroup.DELETE("/batchDel/:id", dept.BatchDelete)
 	sysDeptRouterGroup.GET("/treeSelect", dept.TreeSelectHandler)
 	sysDeptRouterGroup.GET("/roleDeptTreeSelect/:roleId", dept.RoleDeptTreeSelectHandler)
+	sysDeptRouterGroup.GET("/export", dept.DownloadExcelBufferHandler)
 }

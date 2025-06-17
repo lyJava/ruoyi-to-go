@@ -18,4 +18,5 @@ func SysConfigRouterInit(group *echo.Group, sysConfig *controller.SysConfigContr
 	sysConfigRouterGroup.GET("/configKey/:key", sysConfig.SelectByKeyHandler)
 	sysConfigRouterGroup.GET("/refreshCache", sysConfig.RefreshCacheHandler)
 	sysConfigRouterGroup.DELETE("/clearCache", sysConfig.ClearCacheHandler)
+	sysConfigRouterGroup.GET("/export", sysConfig.DownloadExcelBufferHandler)
 }

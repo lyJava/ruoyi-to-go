@@ -20,4 +20,5 @@ func SysRoleRouterInit(group *echo.Group, sysRole *controller.SysRoleController)
 	sysRoleRouterGroup.GET("/list/user", sysRole.SelectIdListHandler)
 	sysRoleRouterGroup.GET("/selectAll", sysRole.SelectAllHandler)
 	sysRoleRouterGroup.PUT("/dataScope", sysRole.DataScopeHandler)
+	sysRoleRouterGroup.GET("/export", sysRole.DownloadExcelBufferHandler)
 }

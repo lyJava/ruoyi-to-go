@@ -108,3 +108,7 @@ func (dp *SysDeptServiceImpl) BuildDeptTreeSelect(list []*domain.Dept) []*domain
 func (dp *SysDeptServiceImpl) SelectListByRoleId(e echo.Context, roleId int64) ([]int64, error) {
 	return dp.DeptDao.SelectListByRoleId(e.Request().Context(), roleId)
 }
+
+func (dp *SysDeptServiceImpl) SelectAll(e echo.Context) ([]*domain.Dept, error) {
+	return dp.DeptDao.SelectAll(e.Request().Context())
+}

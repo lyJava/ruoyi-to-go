@@ -15,4 +15,5 @@ func SysNoticeRouterInit(group *echo.Group, notice *controller.SysNoticeControll
 	sysNoticeRouterGroup.GET("/list", notice.SelectPageGetHandler)
 	sysNoticeRouterGroup.GET("/:id", notice.SelectOneHandler)
 	sysNoticeRouterGroup.DELETE("/:id", notice.BatchDeleteHandler)
+	sysNoticeRouterGroup.GET("/export", notice.DownloadExcelBufferHandler)
 }

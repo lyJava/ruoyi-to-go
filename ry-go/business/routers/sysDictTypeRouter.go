@@ -17,4 +17,5 @@ func SysDictTypeRouterInit(group *echo.Group, sysDictType *controller.SysDictTyp
 	sysDictTypeRouterGroup.DELETE("/:id", sysDictType.BatchDeleteHandler)
 	sysDictTypeRouterGroup.DELETE("/clearCache", sysDictType.ClearCacheHandler)
 	sysDictTypeRouterGroup.GET("/refreshCache", sysDictType.RefreshCacheHandler)
+	sysDictTypeRouterGroup.GET("/export", sysDictType.DownloadExcelBufferHandler)
 }

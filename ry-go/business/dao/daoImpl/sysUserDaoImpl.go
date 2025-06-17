@@ -573,3 +573,198 @@ func (userDao *SysUserDaoImpl) Login(ctx context.Context, user *domain.UserLogin
 	loginUser.UserPwd = ""
 	return loginUser, nil
 }
+
+func (userDao *SysUserDaoImpl) SelectAll(ctx context.Context) ([]*domain.UserForExcel, error) {
+	var (
+		list    []*domain.UserForExcel
+		allData []*domain.UserForExcel
+		count   int64
+		page    = 1
+		size    = 10000
+	)
+	db := userDao.Gorm.WithContext(ctx).Model(&domain.User{})
+	if err := db.Count(&count).Error; err != nil {
+		return nil, errors.New("获取用户所有登录总条数失败")
+	}
+
+	// 分页大小大于或等于总条数，则直接一次性查询
+	if int64(size) >= count {
+		allData, err := userDao.SelectAllList(ctx)
+		if err != nil {
+			return nil, errors.New("获取所有登录总条数失败")
+		}
+		return allData, nil
+	}
+
+	for {
+		list = list[:0]
+		list, err := userDao.SelectList(ctx, int64(size), int64((page-1)*size))
+		if err != nil {
+			return nil, err
+		}
+
+		if len(list) == 0 {
+			break
+		}
+		allData = append(allData, list...)
+		page++
+	}
+
+	userDao.SetUserOtherInfoExcel(allData, ctx)
+	return allData, nil
+}
+
+func (userDao *SysUserDaoImpl) SetUserOtherInfoExcel(list []*domain.UserForExcel, ctx context.Context) {
+	if len(list) > 0 {
+		for _, user := range list {
+			deptInfo, err := userDao.DeptDao.SelectById(ctx, user.DeptId)
+			if err != nil {
+				continue
+			}
+			if deptInfo != nil {
+				user.DeptName = deptInfo.DeptName
+			}
+		}
+	}
+}
+
+func (userDao *SysUserDaoImpl) SetUserOtherInfo(list []*domain.User, ctx context.Context) {
+	if len(list) > 0 {
+		for _, user := range list {
+			user.IsAdmin = domain.IsAdmin(user.Id)
+			deptInfo, err := userDao.DeptDao.SelectById(ctx, user.DeptId)
+			if err != nil {
+				continue
+			}
+			if deptInfo != nil {
+				user.DeptName = deptInfo.DeptName
+			}
+
+			postIds, err := userDao.PostDao.SelectPostIdsByUserId(ctx, user.Id)
+			if err != nil {
+				continue
+			}
+			postNameList, err := userDao.PostDao.SelectPostNameListByIds(ctx, postIds)
+			if err != nil {
+				continue
+			}
+			user.PostNameArray = postNameList
+
+			nameListByUserId, err := userDao.RoleDao.SelectRoleNameListByUserId(ctx, user.Id)
+			if err != nil {
+				continue
+			}
+			user.RoleNameArray = nameListByUserId
+		}
+	}
+}
+
+func (userDao *SysUserDaoImpl) SelectAllList(ctx context.Context) ([]*domain.UserForExcel, error) {
+	result := userDao.Gorm.WithContext(ctx).Raw(
+		`SELECT
+				id,
+				dept_id,
+				username,
+				nickname,
+				CASE
+					WHEN user_type = '00' THEN '系统用户'
+					WHEN user_type = '01' THEN '普通用户'
+					WHEN user_type = '02' THEN '测试用户'
+					ELSE '其他用户'
+				END AS user_type,
+				CASE
+					WHEN email IS NULL THEN ''
+					ELSE email
+				END AS email,
+				CASE
+					WHEN phone_no IS NULL THEN ''
+					ELSE mask_phone(phone_no)
+				END AS phone_no,
+				CASE
+					WHEN sex = '0' THEN '女'
+					WHEN sex = '0' THEN '男'
+					ELSE '其他'
+				END AS sex,
+				avatar,
+				CASE
+					WHEN user_pwd IS NULL THEN ''
+					ELSE mask_password(user_pwd)
+				END AS user_pwd,
+				CASE
+					WHEN user_status = '0' THEN '正常'
+					ELSE '停用'
+				END AS user_status,
+				CASE
+					WHEN create_by IS NULL THEN ''
+					ELSE create_by
+				END AS create_by,
+				CASE
+					WHEN create_time IS NOT NULL THEN to_char(create_time, 'YYYY-MM-DD HH24:MI:SS')
+					ELSE ''
+				END AS create_time,
+				CASE
+					WHEN update_by IS NULL THEN ''
+					ELSE update_by
+				END AS update_by,
+				CASE
+					WHEN update_time IS NOT NULL THEN to_char(update_time, 'YYYY-MM-DD HH24:MI:SS')
+					ELSE ''
+				END AS update_time,
+				CASE
+					WHEN remarks IS NULL THEN ''
+					ELSE remarks
+				END AS remarks,
+				CASE
+					WHEN del_flag = '0' THEN '正常'
+					ELSE '删除'
+				END AS del_flag
+			FROM
+				sys_user
+			ORDER BY id DESC`)
+
+	if result.Error != nil {
+		zap.L().Sugar().Errorf("用户分页查询行数错误===%+v", zap.Error(result.Error))
+		return nil, errors.New("查询数据失败")
+	}
+
+	rows, err := result.Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer func(rows *sql.Rows) {
+		if err = rows.Close(); err != nil {
+			zap.L().Sugar().Errorf("用户分页row关闭错误===%+v", err)
+		}
+	}(rows)
+
+	var list []*domain.UserForExcel
+
+	for rows.Next() {
+		user := &domain.UserForExcel{}
+		if err = rows.Scan(
+			&user.Id,
+			&user.DeptId,
+			&user.Username,
+			&user.Nickname,
+			&user.UserType,
+			&user.Email,
+			&user.PhoneNo,
+			&user.Sex,
+			&user.Avatar,
+			&user.UserPwd,
+			&user.UserStatus,
+			&user.CreateBy,
+			&user.CreateTime,
+			&user.UpdateBy,
+			&user.UpdateTime,
+			&user.Remarks,
+			&user.DelFlag,
+		); err != nil {
+			zap.L().Sugar().Errorf("用户分页row转换===%+v", err)
+			return nil, err
+		}
+		list = append(list, user)
+	}
+
+	return list, nil
+}

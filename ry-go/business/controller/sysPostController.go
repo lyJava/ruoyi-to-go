@@ -9,6 +9,7 @@ import (
 	"ry-go/common/request"
 	"ry-go/common/response"
 	"ry-go/utils"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/cast"
@@ -161,4 +162,15 @@ func (controller *SysPostController) SelectAllHandler(c echo.Context) error {
 	}
 	response.NewResponse(c, 200, "查询成功", allPost)
 	return nil
+}
+
+// DownloadExcelBufferHandler 导出Excel，使用缓冲流
+func (controller *SysPostController) DownloadExcelBufferHandler(c echo.Context) error {
+	data, err := controller.service.SelectAll(c)
+	if err != nil {
+		response.NewRespCodeErr(c, 500, err)
+		return err
+	}
+	headers := []string{"字典类型ID", "岗位编码", "岗位名称", "显示顺序", "部门状态（0正常 1停用）", "创建人", "创建时间", "修改人", "修改时间", "备注信息"}
+	return DownloadExcelBuffer(c, "岗位信息_"+time.Now().Format("20060102150405")+".xlsx", "岗位信息", headers, data, true)
 }

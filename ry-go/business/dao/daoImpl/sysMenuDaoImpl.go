@@ -372,38 +372,18 @@ func (impl *SysMenuDaoImpl) BuildMenuTree(menuList []*domain.SysMenu) ([]*domain
 //goland:noinspection SqlResolve,SqlCaseVsIf,SqlNoDataSourceInspection
 func (impl *SysMenuDaoImpl) SelectMenuList(ctx context.Context, menu *domain.SysMenu) ([]*domain.SysMenu, error) {
 	var menuList []*domain.SysMenu
-	querySql :=
-		`SELECT
-			m.id,
-			m.menu_name,
-			m.parent_id,
-			m.order_num,
-			m.router_path,
-			m.component,
-			m.is_frame,
-			m.is_cache,
-			m.menu_type,
-			m.visible,
-			m.menu_status,
-			coalesce(m.perms, '') AS perms,
-			m.icon,
-			m.create_time,
-			m.update_by,
-			m.update_time
-		FROM
-			sys_menu m`
-	db := impl.Gorm.WithContext(ctx)
+	db := impl.Gorm.WithContext(ctx).Model(&domain.SysMenu{})
 	// 动态条件
 	if menu.MenuName != "" {
-		db.Where("m.menu_name ILIKE ?", "%"+menu.MenuName+"%")
+		db.Where("menu_name ILIKE ?", "%"+menu.MenuName+"%")
 	}
 
 	if menu.Visible != "" {
-		db.Where("m.visible = ?", menu.Visible)
+		db.Where("visible = ?", menu.Visible)
 	}
 
 	if menu.MenuStatus != "" {
-		db.Where("m.menu_status = ?", menu.MenuStatus)
+		db.Where("menu_status = ?", menu.MenuStatus)
 	}
 
 	// 时间范围处理
@@ -413,9 +393,11 @@ func (impl *SysMenuDaoImpl) SelectMenuList(ctx context.Context, menu *domain.Sys
 		}
 	}
 
-	if err := db.Raw(querySql).Find(&menuList).Order("m.parent_id, m.order_num").Error; err != nil {
+	// order必须放在find之前，否则不生效
+	if err := db.Select("*, coalesce(perms, '') AS perms").Order("parent_id, order_num").Find(&menuList).Error; err != nil {
 		return nil, err
 	}
+
 	return menuList, nil
 }
 

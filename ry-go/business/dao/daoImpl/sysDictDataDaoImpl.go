@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/go-redis/redis/v8"
+	"go.uber.org/zap"
 
 	"gorm.io/gorm"
 )
@@ -156,4 +157,48 @@ func (impl *SysDictDataDaoImpl) SelectDictDataByType(ctx context.Context, dictTy
 		return nil, err
 	}
 	return list, nil
+}
+
+func (impl *SysDictDataDaoImpl) SelectAll(ctx context.Context) ([]*domain.SysDictData, error) {
+	var (
+		list    []*domain.SysDictData
+		allData []*domain.SysDictData
+		count   int64
+		page    = 1
+		size    = 2000
+	)
+	db := impl.Gorm.WithContext(ctx).Model(&domain.SysDictData{})
+	if err := db.Count(&count).Error; err != nil {
+		zap.L().Sugar().Errorf("获取字典数据总条数错误:%+v", err)
+		return nil, errors.New("获取字典数据总条数失败")
+	}
+	zap.L().Sugar().Infof("获取字典数据总条数===%d,当前分页批数===%d", count, size)
+
+	// 分页大小大于或等于总条数，则直接一次性查询
+	if int64(size) >= count {
+		if err := db.Find(&allData).Error; err != nil {
+			zap.L().Sugar().Errorf("获取字典数据分页错误:%+v", err)
+			return nil, errors.New("获取字典数据分页失败")
+		}
+		zap.L().Sugar().Infof("分页大小大于或等于总条数一次性查询所有数据的条数===%d", len(allData))
+		return allData, nil
+	}
+
+	for {
+		list = list[:0]
+		if err := db.Limit(size).Offset((page - 1) * size).Find(&list).Error; err != nil {
+			zap.L().Sugar().Errorf("获取字典数据分页错误:%+v", err)
+			return nil, errors.New("获取字典数据分页失败")
+		}
+
+		zap.L().Sugar().Infof("第%d次字典数据分页条数===%d", page, len(list))
+
+		if len(list) == 0 {
+			zap.L().Sugar().Infof("第%d次字典数据分页条数为0退出循环", page)
+			break
+		}
+		allData = append(allData, list...)
+		page++
+	}
+	return allData, nil
 }

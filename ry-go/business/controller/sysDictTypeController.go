@@ -9,6 +9,7 @@ import (
 	"ry-go/common/request"
 	"ry-go/common/response"
 	"ry-go/utils"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/cast"
@@ -169,4 +170,15 @@ func (controller *SysDictTypeController) RefreshCacheHandler(c echo.Context) err
 	}
 	response.NewRespCodeMsg(c, 200, "缓存刷新成功")
 	return nil
+}
+
+// DownloadExcelBufferHandler 导出Excel，使用缓冲流
+func (controller *SysDictTypeController) DownloadExcelBufferHandler(c echo.Context) error {
+	data, err := controller.service.SelectAll(c)
+	if err != nil {
+		response.NewRespCodeErr(c, 500, err)
+		return err
+	}
+	headers := []string{"字典ID", "字典名称", "字典类型", "字典状态（0正常 1停用）", "创建人", "创建时间", "修改人", "修改时间", "备注信息"}
+	return DownloadExcelBuffer(c, "字典信息_"+time.Now().Format("20060102150405")+".xlsx", "字典信息", headers, data, true)
 }

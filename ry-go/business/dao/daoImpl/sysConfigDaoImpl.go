@@ -221,3 +221,46 @@ func (impl *SysConfigDaoImpl) ClearConfigCache(ctx context.Context, list []*doma
 	}
 	return nil
 }
+
+func (impl *SysConfigDaoImpl) SelectAll(ctx context.Context) ([]*domain.SysConfig, error) {
+	var (
+		list    []*domain.SysConfig
+		allData []*domain.SysConfig
+		count   int64
+		page    = 1
+		size    = 10000
+	)
+	db := impl.Gorm.WithContext(ctx).Model(&domain.SysConfig{})
+	if err := db.Count(&count).Error; err != nil {
+		zap.L().Sugar().Errorf("查询系统配置总条数错误===%v", err)
+		return nil, errors.New("查询系统配置总条数失败")
+	}
+	zap.L().Sugar().Infof("获取系统配置分页===%d,当前分页批数===%d", count, size)
+
+	// 分页大小大于或等于总条数，则直接一次性查询
+	if int64(size) >= count {
+		if err := db.Order("config_id").Find(&allData).Error; err != nil {
+			zap.L().Sugar().Errorf("查询系统配置所有数据错误===%v", err)
+			return nil, errors.New("查询系统配置所有数据失败")
+		}
+		zap.L().Sugar().Infof("分页大小大于或等于总条数一次性查询所有数据的条数===%d", len(allData))
+		return allData, nil
+	}
+
+	for {
+		list = list[:0]
+		if err := db.Order("config_id").Limit(size).Offset((page - 1) * size).Find(&list).Error; err != nil {
+			zap.L().Sugar().Errorf("查询系统配置分页错误===%v", err)
+			return nil, errors.New("查询系统配置分页失败")
+		}
+		zap.L().Sugar().Infof("第%d次查询系统配置分页数据条数===%d", page, len(list))
+
+		if len(list) == 0 {
+			zap.L().Sugar().Infof("第%d次查询系统配置分页数据条数为0退出循环", page)
+			break
+		}
+		allData = append(allData, list...)
+		page++
+	}
+	return allData, nil
+}

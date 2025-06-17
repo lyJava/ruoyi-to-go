@@ -17,4 +17,5 @@ func SysDictDataRouterInit(group *echo.Group, sysDictData *controller.SysDictDat
 	sysDictDataRouterGroup.DELETE("/:id", sysDictData.BatchDeleteHandler)
 	sysDictDataRouterGroup.GET("/index/:dictType", sysDictData.SelectDictDataByTypeHandler)
 	sysDictDataRouterGroup.GET("/type/:dictType", sysDictData.SelectDictDataByTypeHandler)
+	sysDictDataRouterGroup.GET("/export", sysDictData.DownloadExcelBufferHandler)
 }

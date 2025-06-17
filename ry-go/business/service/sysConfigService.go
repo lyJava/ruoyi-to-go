@@ -19,4 +19,5 @@ type SysConfigService interface {
 	SelectConfigList(e echo.Context) ([]*domain.SysConfig, error)
 	RefreshConfigCache(e echo.Context, list []*domain.SysConfig) error
 	ClearConfigCache(e echo.Context, list []*domain.SysConfig) error
+	SelectAll(e echo.Context) ([]*domain.SysConfig, error)
 }

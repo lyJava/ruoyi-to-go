@@ -12,6 +12,7 @@ import (
 	"ry-go/common/request"
 	"ry-go/common/response"
 	"ry-go/utils"
+	"time"
 
 	"github.com/asaskevich/govalidator"
 	"github.com/labstack/echo/v4"
@@ -346,4 +347,15 @@ func (controller *UserController) CaptchaRedisHandler(e echo.Context) error {
 // VerifyCaptchaRedisHandler 验证验证码
 func (controller *UserController) VerifyCaptchaRedisHandler(e echo.Context) error {
 	return controller.captchaService.VerifyCaptcha(e)
+}
+
+// DownloadExcelBufferHandler 导出Excel，使用缓冲流
+func (controller *UserController) DownloadExcelBufferHandler(c echo.Context) error {
+	data, err := controller.userService.SelectAll(c)
+	if err != nil {
+		response.NewRespCodeErr(c, 500, err)
+		return err
+	}
+	headers := []string{"ID", "部门ID", "昵称", "用户名", "用户类型", "邮箱", "手机号", "性别", "头像地址", "密码", "启用状态", "创建人", "创建时间", "修改人", "修改时间", "删除状态", "备注信息", "部门名称"}
+	return DownloadExcelBuffer(c, "用户信息_"+time.Now().Format("20060102150405")+".xlsx", "用户信息", headers, data, true)
 }

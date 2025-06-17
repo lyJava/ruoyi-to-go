@@ -16,7 +16,6 @@ import (
 	"github.com/lib/pq"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/spf13/cast"
 	_ "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -187,11 +186,39 @@ func (impl *SysDictTypeDaoImpl) BatchDelete(ctx context.Context, ids []any) (int
 }
 
 func (impl *SysDictTypeDaoImpl) SelectAll(ctx context.Context) ([]*domain.SysDictType, error) {
-	var list []*domain.SysDictType
-	if err := impl.Gorm.WithContext(ctx).Model(&domain.SysDictType{}).Where("status = ?", cast.ToString(0)).Find(&list).Error; err != nil {
-		return nil, err
+	var (
+		list    []*domain.SysDictType
+		allData []*domain.SysDictType
+		count   int64
+		page    = 1
+		size    = 2000
+	)
+	db := impl.Gorm.WithContext(ctx).Model(&domain.SysDictType{})
+	if err := db.Count(&count).Error; err != nil {
+		return nil, fmt.Errorf("获取字典类型总条数失败")
 	}
-	return list, nil
+
+	// 分页大小大于或等于总条数，则直接一次性查询
+	if int64(size) >= count {
+		if err := db.Find(&allData).Error; err != nil {
+			return nil, errors.New("获取字典类型分页失败")
+		}
+		return allData, nil
+	}
+
+	for {
+		list = list[:0]
+		if err := db.Limit(size).Offset((page - 1) * size).Find(&list).Error; err != nil {
+			return nil, errors.New("获取字典类型分页失败")
+		}
+
+		if len(list) == 0 {
+			break
+		}
+		allData = append(allData, list...)
+		page++
+	}
+	return allData, nil
 }
 
 func (impl *SysDictTypeDaoImpl) ClearCache(ctx context.Context) error {

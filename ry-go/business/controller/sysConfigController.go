@@ -2,7 +2,6 @@ package controller
 
 import (
 	"errors"
-	"github.com/spf13/cast"
 	"net/http"
 	"ry-go/business/domain"
 	"ry-go/business/service"
@@ -10,6 +9,9 @@ import (
 	"ry-go/common/request"
 	"ry-go/common/response"
 	"ry-go/utils"
+	"time"
+
+	"github.com/spf13/cast"
 
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
@@ -190,4 +192,15 @@ func (controller *SysConfigController) ClearCacheHandler(c echo.Context) error {
 	}
 	response.NewRespCodeMsg(c, 200, "删除成功")
 	return nil
+}
+
+// DownloadExcelBufferHandler 导出Excel，使用缓冲流
+func (controller *SysConfigController) DownloadExcelBufferHandler(c echo.Context) error {
+	data, err := controller.service.SelectAll(c)
+	if err != nil {
+		response.NewRespCodeErr(c, 500, err)
+		return err
+	}
+	headers := []string{"ID", "参数名称", "参数键名称", "参数键值", "系统内置", "创建人", "创建时间", "修改人", "修改时间", "备注信息"}
+	return DownloadExcelBuffer(c, "系统配置_"+time.Now().Format("20060102150405")+".xlsx", "系统配置", headers, data, true)
 }
