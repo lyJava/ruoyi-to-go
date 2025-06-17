@@ -209,19 +209,23 @@ func WriteDataToExcel[T any](fileName string, headers []string, list []T) (strin
 	return filePath, nil
 }
 
-func WriteDataToExcelBuffer[T any](headers []string, list []T) (*bytes.Buffer, error) {
-	if len(list) == 0 {
-		return nil, fmt.Errorf("数据列表为空，无法导出")
+func WriteDataToExcelBuffer[T any](headers []string, list []T, sheetName string, headerBgColor bool) (*bytes.Buffer, error) {
+	if len(list) <= 0 {
+		return nil, fmt.Errorf("数据列表为空，无法执行导出操作")
 	}
-	f := excelize.NewFile()
-	defer func() { _ = f.Close() }()
 
-	sheet := "Sheet1"
-	// 写入表头
-	for i, header := range headers {
-		cell := indexToColumn(i) + "1"
-		f.SetCellValue(sheet, cell, header)
-		f.SetColWidth(sheet, indexToColumn(i), indexToColumn(i), float64(len(header)*2))
+	// 创建列宽记录器 (初始化值为表头宽度)
+	f, maxColWidths, err := setHeaderContentAndWidth(sheetName, headers)
+	if err != nil {
+		zap.L().Sugar().Errorf("excel工作表===%s设置表头内容与记录宽度错误===%+v",sheetName, err)
+		return nil, err
+	}
+
+	if headerBgColor {
+		if err = setHeaderBgColor(f, sheetName, headers); err != nil {
+			zap.L().Sugar().Errorf("excel工作表===%s设置表头背景色===%+v",sheetName, err)
+			return nil, err
+		}
 	}
 
 	// 写入数据
@@ -230,37 +234,230 @@ func WriteDataToExcelBuffer[T any](headers []string, list []T) (*bytes.Buffer, e
 		if v.Kind() == reflect.Ptr {
 			v = v.Elem()
 		}
-		for colIndex := range v.NumField() {
-			cell := indexToColumn(colIndex) + strconv.Itoa(rowIndex+2)
 
-			field := v.Field(colIndex)
-			var value string
-			switch field.Kind() {
-			case reflect.Struct:
-				if t, ok := field.Interface().(time.Time); ok {
-					value = t.Format("2006-01-02 15:04:05")
-				} else {
-					value = fmt.Sprintf("%v", field.Interface())
-				}
-			default:
-				value = fmt.Sprintf("%v", field.Interface())
+		if v.Kind() != reflect.Struct {
+			return nil, fmt.Errorf("excel数据类型必须是结构体")
+		}
+
+		colIndex := 0
+		for i := 0; i < v.NumField(); i++ {
+			field := v.Field(i)
+			fieldType := v.Type().Field(i)
+
+			// 跳过不可导出的字段
+			if !field.CanInterface() {
+				continue
 			}
 
-			f.SetCellValue(sheet, cell, value)
-			f.SetColWidth(sheet, indexToColumn(colIndex), indexToColumn(colIndex), float64(len(value)+5))
+			// 跳过标记为忽略的字段，这里是gorm查询忽略的的tag为-
+			if tag := fieldType.Tag.Get("gorm"); tag == "-" {
+				continue
+			}
+
+			// 处理嵌套结构体
+			if field.Kind() == reflect.Struct {
+				if _, isTime := field.Interface().(time.Time); isTime {
+					// 时间类型走正常处理流程
+				} else {
+					for j := 0; j < field.NumField(); j++ {
+						nestedField := field.Field(j)
+						nestedType := field.Type().Field(j)
+
+						if !nestedField.CanInterface() {
+							continue
+						}
+
+						if tag := nestedType.Tag.Get("gorm"); tag == "-" {
+							continue
+						}
+
+						// 确保不超过表头列数
+						if colIndex >= len(headers) {
+							break
+						}
+
+						colName := indexToColumn(colIndex)
+						cell := colName + strconv.Itoa(rowIndex+2)
+
+						value := formatCellValue(nestedField)
+
+						if err = f.SetCellValue(sheetName, cell, value); err != nil {
+							zap.L().Sugar().Errorf("excel工作表==%s单元格==%s赋值==%s错误===%+v", sheetName, cell, value, err)
+							return nil, err
+						}
+
+						// 更新最大列宽
+						maxColWidths[colName] = max(maxColWidths[colName], visualWidth(value))
+						colIndex++
+					}
+					continue
+				}
+			}
+			// 确保不超过表头列数
+			if colIndex >= len(headers) {
+				break
+			}
+
+			colName := indexToColumn(colIndex)
+			cell := colName + strconv.Itoa(rowIndex+2)
+
+			value := formatCellValue(field)
+
+			if err = f.SetCellValue(sheetName, cell, value); err != nil {
+				zap.L().Sugar().Errorf("excel工作表==%s单元格==%s赋值==%s错误===%+v", sheetName, cell, value, err)
+				return nil, err
+			}
+
+			// 更新最大列宽
+			maxColWidths[colName] = max(maxColWidths[colName], visualWidth(value))
+			colIndex++
 		}
 	}
+
+	// 设置自适应列宽
+	setColumnAdaptiveWidth(f, sheetName, maxColWidths)
 
 	// 写入到内存缓冲区
 	//buf := new(bytes.Buffer)
 	// 预分配1MB，可能提升速度并不明显
-	var buf = bytes.NewBuffer(make([]byte, 0, 1<<20)) 
-	if err := f.Write(buf); err != nil {
+	var buf = bytes.NewBuffer(make([]byte, 0, 1<<20))
+	if err = f.Write(buf); err != nil {
+		zap.L().Sugar().Errorf("excel工作表==%s写入缓冲区错误===%+v", sheetName, err)
 		return nil, err
 	}
 	return buf, nil
 }
 
+func formatCellValue(field reflect.Value) string {
+	var value string
+	switch field.Kind() {
+	case reflect.Struct:
+		if t, ok := field.Interface().(time.Time); ok {
+			value = t.Format(time.DateTime)
+		} else {
+			value = fmt.Sprintf("%v", field.Interface())
+		}
+	default:
+		value = fmt.Sprintf("%v", field.Interface())
+	}
+	return value
+}
+
+func setHeaderBgColor(f *excelize.File, sheetName string, headers []string) error {
+	if len(headers) <= 0 {
+		return errors.New("excel标题切片不能为空")
+	}
+	// 创建标题样式 - 灰色背景 + 加粗 + 居中
+	headerStyle, err := f.NewStyle(&excelize.Style{
+		Fill: excelize.Fill{
+			Type:    "pattern",
+			Pattern: 1,
+			Color:   []string{"#EBEBEB"}, // 黄色背景
+		},
+		Font: &excelize.Font{
+			Bold: true, // 加粗
+		},
+		Alignment: &excelize.Alignment{
+			Horizontal: "center", // 水平居中
+			Vertical:   "center", // 垂直居中
+		},
+	})
+	if err != nil {
+		zap.L().Sugar().Errorf("excel工作表==%s创建标题样式错误===%+v", sheetName, err)
+		return fmt.Errorf("创建标题样式失败: %v", err)
+	}
+
+	for i := range headers {
+		cell := indexToColumn(i) + "1"
+		if err = f.SetCellStyle(sheetName, cell, cell, headerStyle); err != nil {
+			zap.L().Sugar().Errorf("excel工作表==%s设置标题单元格==%s样式错误===%+v", sheetName, cell, err)
+			return fmt.Errorf("设置标题单元格样式失败: %v", err)
+		}
+	}
+
+	return nil
+}
+
+// setHeaderContentAndWidth 设置表格标题内容与记录宽度
+func setHeaderContentAndWidth(sheetName string, headers []string) (*excelize.File, map[string]int, error) {
+	// 确保工作表存在
+	if sheetName == "" {
+		sheetName = "Sheet1"
+	}
+
+	f := excelize.NewFile()
+	defer func() {
+		if err := f.Close(); err != nil {
+			zap.L().Sugar().Errorf("关闭excel文件错误===%+v", err)
+		}
+	}()
+
+	// 创建或激活指定名称的工作表
+	defaultSheet := f.GetSheetName(0)
+
+	// 检查目标工作表是否存在（兼容旧版本）
+	targetSheetExists := false
+	for i := 0; i < f.SheetCount; i++ {
+		if f.GetSheetName(i) == sheetName {
+			targetSheetExists = true
+			break
+		}
+	}
+
+	if !targetSheetExists {
+		// 如果目标工作表不存在则创建
+		sheetIndex, err := f.NewSheet(sheetName)
+		if err != nil {
+			return nil, nil, err
+		}
+		zap.L().Sugar().Infof("excel指定的工作表不存在，创建工作表===%s,索引===%d", sheetName, sheetIndex)
+		// 创建额外的工作表，macOS预览的时候就能看到激活的工作表名称了
+		_, _ = f.NewSheet("sheet2")
+		// 删除默认创建的工作表（如果存在）
+		if defaultSheet != sheetName && f.SheetCount > 1 {
+			if err = f.DeleteSheet(defaultSheet); err != nil {
+				zap.L().Sugar().Errorf("excel删除默认工作表==%s错误===%+v", defaultSheet, err)
+				return nil, nil, err
+			}
+		}
+		// 设置第一个工作表为激活状态
+		f.SetActiveSheet(0)
+	}
+
+	maxColWidths := make(map[string]int)
+
+	for i, header := range headers {
+		colName := indexToColumn(i)
+		cell := colName + "1"
+		if err := f.SetCellValue(sheetName, cell, header); err != nil {
+			return nil, nil, err
+		}
+		//f.SetColWidth(sheet, indexToColumn(i), indexToColumn(i), float64(len(header)*2))
+		maxColWidths[colName] = max(maxColWidths[colName], visualWidth(header))
+	}
+	return f, maxColWidths, nil
+}
+
+func visualWidth(s string) int {
+	width := 0
+	for _, r := range s {
+		if r > 127 {
+			width += 2 // 中文等宽字符
+		} else {
+			width += 1 // 英文/数字
+		}
+	}
+	return width
+}
+
+func setColumnAdaptiveWidth(f *excelize.File, sheetName string, maxColWidths map[string]int) {
+	if len(maxColWidths) <= 0 {
+		return
+	}
+	for colName, width := range maxColWidths {
+		_ = f.SetColWidth(sheetName, colName, colName, float64(width+5))
+	}
+}
 
 // indexToColumn 将索引转换为 Excel 列名
 func indexToColumn(index int) string {
