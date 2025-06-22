@@ -24,9 +24,9 @@
 git clone https://gitee.com/lyforvue/ruoyi_vue3_ts.git
 
 # 进入项目目录
-cd ruoyi_vue3_ts
+cd ry-ui
 
-# 安装依赖
+# 安装npm包依赖
 npm install
 
 # 不建议使用cnpm安装依赖，可能会出现莫名其妙的问题，npm依赖安装比较慢使用如下方式
@@ -37,7 +37,7 @@ npm run dev
 
 # 需要修改端口请自行改动vite.config.ts中server中的port的值
 ```
-浏览器访问 <a href="http://localhost:7000" target="_blank">http://localhost:7000</a>
+浏览器访问 <a href="http://localhost:7001" target="_blank">http://localhost:7000</a>
 
 ## 发布
 
