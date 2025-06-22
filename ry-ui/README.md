@@ -19,10 +19,13 @@
 
 ## 前端运行
 
-```bash
-# 克隆项目
-git clone https://gitee.com/lyforvue/ruoyi_vue3_ts.git
 
+# 克隆项目
+github地址：HTTPS：https://github.com/lyJava/ruoyi-to-go.git SSH：git@github.com:lyJava/ruoyi-to-go.git
+
+gitee地址：HTTPS：git clone https://gitee.com/lyforvue/ruoyi-to-go.git  SSH：git@gitee.com:lyforvue/ruoyi-to-go.git
+
+```bash
 # 进入项目目录
 cd ry-ui
 
@@ -37,7 +40,7 @@ npm run dev
 
 # 需要修改端口请自行改动vite.config.ts中server中的port的值
 ```
-浏览器访问 <a href="http://localhost:7001" target="_blank">http://localhost:7000</a>
+浏览器访问 <a href="http://localhost:7001" target="_blank">http://localhost:7001</a>
 
 ## 发布
 
