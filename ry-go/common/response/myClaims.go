@@ -1,6 +1,6 @@
 package response
 
-import "github.com/golang-jwt/jwt/v4"
+import "github.com/golang-jwt/jwt/v5"
 
 // MyClaims 自定义jwt的token返回字段
 type MyClaims struct {

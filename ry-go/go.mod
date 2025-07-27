@@ -9,7 +9,7 @@ require (
 	github.com/boombuler/barcode v1.0.2
 	github.com/fatih/color v1.14.1
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/golang-jwt/jwt/v4 v4.5.2
+	github.com/golang-jwt/jwt/v5 v5.2.3
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.6.0
 	github.com/imroc/req/v3 v3.50.0
